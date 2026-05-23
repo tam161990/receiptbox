@@ -1,0 +1,183 @@
+// ReceiptBox LV — Prisma schema
+// NOTE: SQLite does not support native enums. The fields below that represent
+// enums (status, category, deductibleStatus, currency) are stored as String
+// values, but the allowed values are enforced in application code via the
+// constants/types in src/lib/enums.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String     @id @default(cuid())
+  telegramUserId   String     @unique
+  telegramUsername String?
+  firstName        String?
+  lastName         String?
+
+  // Profile fields — used by the AI to give context-aware answers.
+  // E.g. selfEmployedType = "IT konsultants", "Pārvadātājs", "Pasniedzējs"
+  selfEmployedType        String?
+  workFromHomePercent     Int?
+  mainActivityDescription String?
+  // JSON-encoded per-category percent overrides, e.g. {"electricity": 70}.
+  categoryDefaultsJson    String?
+  // JSON-encoded per-category custom display labels, e.g. {"electricity": "Свет в офисе"}.
+  // Backend logic still uses canonical codes; this is purely cosmetic.
+  categoryLabelsJson      String?
+  // JSON array of user identifiers (phone numbers, IBANs, meter numbers,
+  // license plates, etc.). Used to auto-filter multi-line invoices so that
+  // only lines belonging to the user are counted as business expenses.
+  myIdentifiersJson       String?
+  // JSON map ExpenseCategory code → DocumentRetrievalLocation code (where the user
+  // usually finds originals). Used to pre-fill new uploads / Telegram docs.
+  categoryRetrievalDefaultsJson String?
+
+  // Plan & monetization infrastructure (not enforced yet — see src/lib/features.ts)
+  countryCode                   String   @default("LV")
+  planType                      String   @default("beta")   // PlanType enum string
+  planStatus                    String   @default("active") // PlanStatus enum string
+  foundingJoinedAt              DateTime?
+  isFoundingUser                Boolean  @default(false)
+  foundingDiscountPercent       Int      @default(0)
+  foundingFeatureSnapshotJson   String?  // JSON string[] of Feature codes at founder join time
+  betaUntil                     DateTime?
+  featuresJson                  String   @default("{}") // per-user feature overrides (future)
+  monthlyDocumentLimit          Int      @default(999999)
+  monthlyAiQuestionsLimit       Int      @default(999999)
+  documentsProcessedCurrentMonth Int     @default(0)
+  aiQuestionsCurrentMonth       Int      @default(0)
+  lastUsageResetAt              DateTime?
+
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  documents        Document[]
+  aiQuestions      AiQuestion[]
+  userCategories   UserCategory[]
+  usageEvents      UsageEvent[]
+}
+
+// Granular usage analytics — infrastructure for future pricing & segmentation.
+model UsageEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType String   // e.g. document_upload_web, ask_ai, csv_export
+  metadata  String?  // JSON blob (source, count, year, quarter, etc.)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, eventType])
+}
+
+// User-defined subcategories under a built-in ExpenseCategory.
+// Multiple subcategories can exist under one parent (e.g. parent="hardware":
+// "Lopātas", "Cimdi", "Datora detaļas"). Subcategories may override the
+// deductible percent of their parent.
+model UserCategory {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentCategory       String   // ExpenseCategory enum string
+  name                 String
+  deductibleStatus     String?  // DeductibleStatus enum string, optional override
+  deductiblePercent    Float?
+  sortOrder            Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  documents            Document[]
+
+  @@index([userId, parentCategory])
+  @@unique([userId, parentCategory, name])
+}
+
+model AiQuestion {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId  String?
+  question    String
+  answer      String
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([documentId])
+}
+
+model Document {
+  id                       String   @id @default(cuid())
+  userId                   String
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // File metadata — original file is deleted after successful AI extraction (privacy-first).
+  originalFileName         String
+  storedFilePath           String?
+  mimeType                 String
+  fileSize                 Int
+  telegramFileId           String?
+  uploadedAt               DateTime @default(now())
+  fileDeletedAt            DateTime?
+
+  // Where the expense record came from + optional user note (original lives only with the user).
+  sourceType               String   @default("unknown") // web | telegram | unknown
+  sourceHint               String?
+  userSourceNote           String?
+  // Where to find the original later (email, utility app, folder…). Distinct from sourceType.
+  retrievalLocation        String?
+  retrievalCustomNote      String?
+
+  // Processing status (DocumentStatus enum string)
+  status                   String   @default("uploaded")
+
+  // Extracted document fields
+  documentDate             DateTime?
+  paymentDate              DateTime?
+  servicePeriodStart       DateTime?
+  servicePeriodEnd         DateTime?
+  vendorName               String?
+  vendorRegistrationNumber String?
+  documentNumber           String?
+  currency                 String?
+  netAmount                Float?
+  vatAmount                Float?
+  totalAmount              Float?
+
+  // Classification
+  category                 String?  // ExpenseCategory enum string
+  deductibleStatus         String?  // DeductibleStatus enum string
+  deductiblePercent        Float?
+  deductibleAmount         Float?
+  // Optional user-defined subcategory (one of UserCategory rows belonging to this user).
+  userCategoryId           String?
+  userCategory             UserCategory? @relation(fields: [userCategoryId], references: [id], onDelete: SetNull)
+
+  // JSON array of line items extracted from a multi-position invoice. Each
+  // entry holds: { id, description, identifier, netAmount, vatAmount,
+  // totalAmount, included, vatAssumed, belongsToUser }. Empty / null for
+  // simple single-position receipts.
+  lineItemsJson            String?
+  // Recomputed sums over the lines where `included` is true. When null we
+  // fall back to top-level totalAmount/deductibleAmount in reports.
+  totalAmountAttributed    Float?
+  deductibleAmountAttributed Float?
+
+  // AI metadata
+  confidenceScore          Float?
+  explanation              String?
+  needsReviewReasons       String?  // JSON-encoded string[]
+  rawExtractedText         String?
+  aiJson                   String?  // full AI JSON response
+
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, documentDate])
+  @@index([userId, status])
+  @@index([userCategoryId])
+}

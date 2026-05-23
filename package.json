@@ -1,0 +1,47 @@
+{
+  "name": "receiptbox-lv",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=1 next dev",
+    "dev:clean": "rm -rf .next && WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=1 next dev",
+    "dev:auto": "./scripts/dev.command",
+    "clean": "rm -rf .next",
+    "build": "prisma generate && next build",
+    "start": "sh scripts/start-production.sh",
+    "lint": "next lint",
+    "icons:generate": "node scripts/generate-app-icons.mjs",
+    "telegram:set-photo": "node scripts/set-telegram-bot-photo.mjs",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "storage:cleanup-orphans": "node scripts/cleanup-orphan-uploads.mjs",
+    "storage:cleanup-orphans:dry": "node scripts/cleanup-orphan-uploads.mjs --dry-run"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.16.0",
+    "next": "^14.2.35",
+    "openai": "^4.73.1",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8",
+    "prisma": "^5.22.0"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/node": "^22.9.3",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3"
+  }
+}

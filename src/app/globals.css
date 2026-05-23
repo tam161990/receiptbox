@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+}
+
+.badge-uploaded {
+  @apply badge bg-slate-100 text-slate-700;
+}
+
+.badge-processing {
+  @apply badge bg-amber-100 text-amber-800;
+}
+
+.badge-processed {
+  @apply badge bg-emerald-100 text-emerald-700;
+}
+
+.badge-failed {
+  @apply badge bg-rose-100 text-rose-700;
+}
+
+.badge-needs-review {
+  @apply badge bg-orange-100 text-orange-700;
+}
+
+.badge-deductible-yes {
+  @apply badge bg-emerald-100 text-emerald-700;
+}
+
+.badge-deductible-partial {
+  @apply badge bg-sky-100 text-sky-700;
+}
+
+.badge-deductible-no {
+  @apply badge bg-rose-100 text-rose-700;
+}
+
+.badge-deductible-unknown {
+  @apply badge bg-slate-100 text-slate-600;
+}
+
+.card {
+  @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm;
+}
+
+.btn {
+  @apply inline-flex min-h-11 min-w-[2.75rem] items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition;
+}
+
+.btn-primary {
+  @apply btn bg-brand-600 text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-300;
+}
+
+.btn-secondary {
+  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100;
+}
+
+.input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+}
+
+.input-compact {
+  @apply input py-1.5 text-sm;
+}
+
+.label {
+  @apply mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500;
+}
+
+.label-compact {
+  @apply mb-0.5 block whitespace-nowrap text-[11px] font-medium uppercase tracking-wide text-slate-500;
+}
+
+.pb-safe {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}

@@ -1,0 +1,31 @@
+{
+  "name": "ReceiptBox LV",
+  "short_name": "ReceiptBox",
+  "description": "Vienkāršākais veids, kā sagatavot izdevumus deklarācijai",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#9C1B34",
+  "orientation": "portrait",
+  "lang": "lv",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

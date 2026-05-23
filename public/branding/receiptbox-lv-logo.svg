@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" fill="none" role="img" aria-label="ReceiptBox LV">
+  <rect x="0" y="2" width="52" height="52" rx="12" fill="#E0EEFE" stroke="#7CC8FC" stroke-width="1"/>
+  <svg x="4" y="6" width="44" height="44" viewBox="24 32 80 78" fill="none" aria-hidden="true">
+    <path d="M28 58 L64 38 L64 88 L28 108 Z" fill="#0070C7"/>
+    <path d="M64 38 L100 58 L100 108 L64 88 Z" fill="#36ABF8"/>
+    <path d="M28 58 L64 38 L100 58 L64 78 Z" fill="#5CB8FA"/>
+    <path d="M28 58 L64 78 L100 58" stroke="#0159A1" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M64 38 L64 88" stroke="#0159A1" stroke-width="1.5"/>
+    <rect x="46" y="52" width="36" height="44" rx="2" fill="#FFFFFF" stroke="#64748B" stroke-width="1.5"/>
+    <path d="M46 52 L50 48 L78 48 L82 52" fill="#FFFFFF" stroke="#64748B" stroke-width="1.5"/>
+    <line x1="52" y1="62" x2="76" y2="62" stroke="#0070C7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="52" y1="70" x2="76" y2="70" stroke="#0070C7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="52" y1="78" x2="68" y2="78" stroke="#0070C7" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="78" cy="88" r="9" fill="#10B981"/>
+    <path d="M74 88 L77 91 L83 85" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <text x="62" y="38" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#0B3F6E">ReceiptBox</text>
+  <text x="216" y="38" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#E11D48">LV</text>
+</svg>

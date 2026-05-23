@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="ReceiptBox icon">
+  <!-- Open box -->
+  <path d="M20 52 L64 28 L108 52 L108 96 L64 120 L20 96 Z" fill="#0070C7"/>
+  <path d="M20 52 L64 76 L108 52" fill="#36ABF8"/>
+  <path d="M64 28 L64 76" stroke="#0159A1" stroke-width="2"/>
+  <path d="M20 52 L64 76 L108 52" stroke="#0159A1" stroke-width="2"/>
+  <!-- Receipt -->
+  <rect x="44" y="58" width="40" height="48" rx="2" fill="#fff"/>
+  <path d="M44 58 L48 54 L84 54 L88 58" fill="#fff"/>
+  <line x1="50" y1="68" x2="78" y2="68" stroke="#7CC8FC" stroke-width="3" stroke-linecap="round"/>
+  <line x1="50" y1="76" x2="78" y2="76" stroke="#7CC8FC" stroke-width="3" stroke-linecap="round"/>
+  <line x1="50" y1="84" x2="70" y2="84" stroke="#7CC8FC" stroke-width="3" stroke-linecap="round"/>
+  <!-- Checkmark -->
+  <path d="M72 92 L76 96 L84 88" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
