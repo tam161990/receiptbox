@@ -6,6 +6,16 @@ if [ -z "$DATABASE_URL" ]; then
   exit 1
 fi
 
+# If DB lives on the Railway volume but DATA_DIR was not set, default to /data.
+case "${DATABASE_URL:-}" in
+  file:/data/*)
+    if [ -z "${DATA_DIR:-}" ]; then
+      export DATA_DIR="/data"
+      echo "[start] DATA_DIR not set; using /data (matches DATABASE_URL)"
+    fi
+    ;;
+esac
+
 if [ -n "$DATA_DIR" ]; then
   mkdir -p "$DATA_DIR/uploads"
 fi
