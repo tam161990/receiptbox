@@ -39,6 +39,7 @@ In Railway → **Variables**:
 | `OPENAI_API_KEY` | your key |
 | `OPENAI_MODEL` | `gpt-4o-mini` (optional) |
 | `TELEGRAM_BOT_TOKEN` | from @BotFather |
+| `TELEGRAM_BOT_USERNAME` | bot username without `@` (e.g. `ReceiptBox_bot`) — for web login widget |
 | `TELEGRAM_WEBHOOK_SECRET` | long random string |
 | `DEV_LOGIN_PIN` | leave **empty** |
 
@@ -98,13 +99,15 @@ Verify:
 curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"
 ```
 
-BotFather:
+BotFather (required for **Telegram Login** on the website):
 
 ```
 /setdomain
 → your bot
 → receiptbox.online
 ```
+
+Without this, the blue “Log in with Telegram” button will not work.
 
 Bot photo (optional):
 
@@ -118,7 +121,8 @@ npm run telegram:set-photo
 ## 7. Smoke test
 
 - [ ] https://receiptbox.online — landing loads
-- [ ] Login / dashboard works
+- [ ] Login with Telegram button → dashboard works
+- [ ] Login / dashboard works (manual ID fallback)
 - [ ] Telegram `/start` — onboarding messages
 - [ ] Send a PDF to the bot — document appears in dashboard
 - [ ] PWA icon on mobile (optional)
@@ -154,6 +158,6 @@ npm start
 
 ## Next steps (not blocking beta)
 
-- Telegram Login Widget (replace manual Telegram ID)
+- ~~Telegram Login Widget~~ (done — set `TELEGRAM_BOT_USERNAME` + BotFather `/setdomain`)
 - PostgreSQL instead of SQLite
 - Cloudflare R2 for uploads

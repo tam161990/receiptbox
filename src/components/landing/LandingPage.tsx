@@ -16,9 +16,11 @@ import { FinalCtaSection } from "./FinalCtaSection";
 import { MotionButton } from "./landingMotion";
 
 export function LandingPage({
+  botUsername,
   pinRequired,
   initialLoginOpen = false,
 }: {
+  botUsername: string | null;
   pinRequired: boolean;
   initialLoginOpen?: boolean;
 }) {
@@ -75,7 +77,12 @@ export function LandingPage({
         </p>
       </footer>
 
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} pinRequired={pinRequired} />
+      <LoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        botUsername={botUsername}
+        pinRequired={pinRequired}
+      />
       <CookieConsent />
     </div>
   );

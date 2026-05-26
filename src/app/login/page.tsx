@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
+import { getTelegramBotUsername } from "@/lib/authLogin";
 import { LoginForm } from "./LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export default async function LoginPage() {
     redirect("/dashboard");
   }
   const pinRequired = Boolean(process.env.DEV_LOGIN_PIN && process.env.DEV_LOGIN_PIN.length > 0);
+  const botUsername = getTelegramBotUsername();
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
       <div className="w-full max-w-md">
@@ -30,15 +32,23 @@ export default async function LoginPage() {
         <div className="card">
           <h2 className="mb-2 text-base font-semibold text-slate-900">Pieslēgties</h2>
           <p className="mb-4 text-sm text-slate-600">
-            Ievadi savu Telegram lietotāja ID, lai redzētu savus dokumentus.
-            ID iegūsi, nosūtot komandu <code>/id</code> mūsu Telegram botam.
+            Pieslēdzies ar Telegram — redzēsi tos pašus dokumentus, ko sūti botam{" "}
+            {botUsername ? (
+              <>
+                <a
+                  href={`https://t.me/${botUsername}`}
+                  className="text-brand-700 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  @{botUsername}
+                </a>
+              </>
+            ) : null}
+            .
           </p>
-          <LoginForm pinRequired={pinRequired} />
+          <LoginForm botUsername={botUsername} pinRequired={pinRequired} />
         </div>
-        <p className="mt-4 text-center text-xs text-slate-500">
-          MVP: pārbaudes pieeja bez paroļu pārvaldības. Produkcijā plānota
-          drošāka autentifikācija.
-        </p>
         <p className="mt-3 text-center text-sm">
           <Link href="/" className="text-brand-700 hover:underline">
             ← Atpakaļ uz sākumu

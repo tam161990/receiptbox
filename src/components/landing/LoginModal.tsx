@@ -5,10 +5,12 @@ import { LoginForm } from "@/app/login/LoginForm";
 export function LoginModal({
   open,
   onClose,
+  botUsername,
   pinRequired,
 }: {
   open: boolean;
   onClose: () => void;
+  botUsername: string | null;
   pinRequired: boolean;
 }) {
   if (!open) return null;
@@ -28,8 +30,23 @@ export function LoginModal({
               Pieslēgties
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              Ievadi savu Telegram lietotāja ID. ID iegūsi, nosūtot{" "}
-              <code className="rounded bg-slate-100 px-1">/id</code> mūsu Telegram botam.
+              {botUsername ? (
+                <>
+                  Izmanto Telegram pogu — tas pašas dati, ko botā{" "}
+                  <a
+                    href={`https://t.me/${botUsername}`}
+                    className="text-brand-700 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    @{botUsername}
+                  </a>
+                  .
+                </>
+              ) : (
+                "Ievadi Telegram ID no bota komandas /id."
+              )}
             </p>
           </div>
           <button
@@ -41,10 +58,7 @@ export function LoginModal({
             ✕
           </button>
         </div>
-        <LoginForm pinRequired={pinRequired} redirectTo="/dashboard" />
-        <p className="mt-4 text-xs text-slate-500">
-          MVP: pārbaudes pieeja. Produkcijā plānota drošāka autentifikācija ar Telegram.
-        </p>
+        <LoginForm botUsername={botUsername} pinRequired={pinRequired} redirectTo="/dashboard" />
       </div>
     </div>
   );

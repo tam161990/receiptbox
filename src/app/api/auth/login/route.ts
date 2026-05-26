@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { upsertUserByTelegramId } from "@/lib/founders";
-import { SESSION_COOKIE_NAME } from "@/lib/auth";
+import {
+  checkDevLoginPin,
+  createAuthenticatedSessionResponse,
+} from "@/lib/authLogin";
 
 export const runtime = "nodejs";
 
+/** Fallback login by numeric Telegram ID (dev / if widget unavailable). */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   let body: { telegramUserId?: unknown; pin?: unknown } = {};
   try {
@@ -11,6 +14,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   } catch {
     return NextResponse.json({ ok: false, error: "invalid_body" }, { status: 400 });
   }
+
+  const pinError = checkDevLoginPin(body.pin);
+  if (pinError) return pinError;
 
   const rawId = body.telegramUserId;
   const telegramUserId =
@@ -25,30 +31,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const requiredPin = process.env.DEV_LOGIN_PIN;
-  if (requiredPin && requiredPin.length > 0) {
-    const pin = typeof body.pin === "string" ? body.pin.trim() : "";
-    if (pin !== requiredPin) {
-      return NextResponse.json(
-        { ok: false, error: "Nepareizs PIN kods." },
-        { status: 401 },
-      );
-    }
+  try {
+    return await createAuthenticatedSessionResponse(telegramUserId);
+  } catch (error) {
+    console.error("[auth/login] session failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "Neizdevās pieslēgties." },
+      { status: 500 },
+    );
   }
-
-  const user = await upsertUserByTelegramId(telegramUserId);
-
-  const res = NextResponse.json({
-    ok: true,
-    isFoundingUser: user.isFoundingUser,
-    planType: user.planType,
-  });
-  res.cookies.set(SESSION_COOKIE_NAME, telegramUserId, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-    secure: process.env.NODE_ENV === "production",
-  });
-  return res;
 }

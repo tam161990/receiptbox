@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
+import { getTelegramBotUsername } from "@/lib/authLogin";
 import { LandingPage } from "@/components/landing/LandingPage";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export default async function HomePage({
 
   return (
     <LandingPage
+      botUsername={getTelegramBotUsername()}
       pinRequired={pinRequired}
       initialLoginOpen={searchParams.login === "1"}
     />
