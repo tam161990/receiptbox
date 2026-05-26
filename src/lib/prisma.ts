@@ -13,10 +13,11 @@ export const prisma =
 // Reuse one client per process (avoids SQLite lock errors on Railway).
 globalForPrisma.prisma = prisma;
 
-/** Verifies DB read/write against the User table (not just SELECT 1). */
+/** Verifies Prisma can query core tables (catches schema drift, not just SELECT 1). */
 export async function isDatabaseReachable(): Promise<boolean> {
   try {
     await prisma.user.count();
+    await prisma.document.count();
     return true;
   } catch (error) {
     console.error("[prisma] database unreachable:", error);
