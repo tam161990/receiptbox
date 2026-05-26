@@ -21,7 +21,7 @@ export default async function HomePage({
 
   return (
     <LandingPage
-      botUsername={getTelegramBotUsername()}
+      botUsername={await getTelegramBotUsername()}
       pinRequired={pinRequired}
       initialLoginOpen={searchParams.login === "1"}
     />

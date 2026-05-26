@@ -37,8 +37,32 @@ export async function createAuthenticatedSessionResponse(
   return res;
 }
 
+let cachedBotUsername: string | null | undefined;
+
 /** Bot username without @ for Telegram Login Widget (`data-telegram-login`). */
-export function getTelegramBotUsername(): string | null {
-  const raw = process.env.TELEGRAM_BOT_USERNAME?.trim().replace(/^@/, "");
-  return raw || null;
+export async function getTelegramBotUsername(): Promise<string | null> {
+  const fromEnv = process.env.TELEGRAM_BOT_USERNAME?.trim().replace(/^@/, "");
+  if (fromEnv) return fromEnv;
+
+  if (cachedBotUsername !== undefined) return cachedBotUsername;
+
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  if (!token) {
+    cachedBotUsername = null;
+    return null;
+  }
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/getMe`, {
+      cache: "no-store",
+    });
+    const data = (await res.json()) as { ok?: boolean; result?: { username?: string } };
+    cachedBotUsername =
+      data.ok && data.result?.username ? data.result.username.trim() : null;
+  } catch (error) {
+    console.error("[auth] getMe for bot username failed:", error);
+    cachedBotUsername = null;
+  }
+
+  return cachedBotUsername;
 }
