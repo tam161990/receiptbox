@@ -145,7 +145,8 @@ npm start
 | DB empty after redeploy | Volume not mounted — check `DATA_DIR` and `/data` volume |
 | Telegram webhook 403 | `TELEGRAM_WEBHOOK_SECRET` mismatch between Railway and `setWebhook` |
 | Bot silent, webhook 200 | `TELEGRAM_BOT_TOKEN` must be **full** `123456789:ABC...` from BotFather, not only the part after `:` |
-| Check bot token on server | `GET https://receiptbox.online/api/telegram/webhook` → `config.botTokenValid: true` |
+| Bot silent, `botTokenValid: true` | Database broken — `GET /api/telegram/webhook` → `databaseOk: false`. Add Railway **Volume** at `/data`, set `DATA_DIR=/data` and `DATABASE_URL=file:/data/prod.db`, redeploy |
+| Check bot token on server | `GET https://receiptbox.online/api/telegram/webhook` → `config.botTokenValid: true` and `config.databaseOk: true` |
 | 502 from Cloudflare | Railway service not running — check deploy logs |
 | Cookie login fails | `APP_URL` must match public URL; `secure` cookies need HTTPS |
 

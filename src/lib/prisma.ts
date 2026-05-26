@@ -13,3 +13,14 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+/** Quick connectivity probe for health / Telegram diagnostics. */
+export async function isDatabaseReachable(): Promise<boolean> {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return true;
+  } catch (error) {
+    console.error("[prisma] database unreachable:", error);
+    return false;
+  }
+}

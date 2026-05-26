@@ -150,22 +150,19 @@ export async function sendTelegramMessage(
     ...(options?.replyMarkup ? { reply_markup: options.replyMarkup } : {}),
   };
 
-  try {
-    await telegramApi("sendMessage", { ...payload, parse_mode: "HTML" });
-    return;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const htmlParseFailed = message.includes("can't parse entities");
-    console.error("[telegram] sendMessage (HTML) failed:", message);
+  const attempts: Array<Record<string, unknown>> = [
+    { ...payload, parse_mode: "HTML" },
+    { ...payload, parse_mode: "HTML", reply_markup: undefined },
+    { chat_id: payload.chat_id, text: payload.text, disable_web_page_preview: true },
+  ];
 
-    if (!htmlParseFailed) return;
-
+  for (let i = 0; i < attempts.length; i += 1) {
     try {
-      await telegramApi("sendMessage", payload);
-    } catch (fallbackError) {
-      const fallbackMessage =
-        fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
-      console.error("[telegram] sendMessage (plain) failed:", fallbackMessage);
+      await telegramApi("sendMessage", attempts[i]);
+      return;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`[telegram] sendMessage attempt ${i + 1} failed:`, msg);
     }
   }
 }
@@ -272,8 +269,10 @@ export async function sendTelegramStartOnboarding(
   await sendTelegramMessage(chatId, telegramStartWelcomeMessage(firstName), {
     replyMarkup: telegramStartWelcomeKeyboard(),
   });
-  await sleep(START_PRIVACY_DELAY_MS);
-  await sendTelegramMessage(chatId, telegramStartPrivacyMessage());
+  void (async () => {
+    await sleep(START_PRIVACY_DELAY_MS);
+    await sendTelegramMessage(chatId, telegramStartPrivacyMessage());
+  })();
 }
 
 export async function handleTelegramStartCallback(

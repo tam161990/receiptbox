@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseReachable, prisma } from "@/lib/prisma";
 import { upsertUserByTelegramId } from "@/lib/founders";
 import { saveBufferForUser } from "@/lib/storage";
 import {
@@ -212,8 +212,19 @@ async function handleIncomingFile(
 
 async function handleMessage(message: TelegramMessage): Promise<void> {
   if (!message.from) return;
-  const user = await ensureUser(message.from);
   const chatId = message.chat.id;
+
+  let user: Awaited<ReturnType<typeof ensureUser>>;
+  try {
+    user = await ensureUser(message.from);
+  } catch (error) {
+    console.error("[telegram] ensureUser failed:", error);
+    await sendTelegramMessage(
+      chatId,
+      "⚠️ Pagaidām nevar pieslēgties serverim (datubāze). Pārbaudi Railway: Volume /data un DATABASE_URL=file:/data/prod.db, tad deploy no jauna.",
+    );
+    return;
+  }
   const text = (message.text || "").trim();
   const command = messageCommand(text);
 
@@ -297,11 +308,35 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ ok: true });
 }
 
+async function fetchTelegramWebhookStatus(): Promise<{
+  pendingUpdateCount?: number;
+  lastErrorMessage?: string;
+} | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  if (!token) return null;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`);
+    const data = (await res.json()) as {
+      ok?: boolean;
+      result?: { pending_update_count?: number; last_error_message?: string };
+    };
+    if (!data.ok || !data.result) return null;
+    return {
+      pendingUpdateCount: data.result.pending_update_count,
+      lastErrorMessage: data.result.last_error_message,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(): Promise<NextResponse> {
   const { isTelegramBotTokenValid } = await import("@/lib/telegram");
   const tokenSet = Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim());
   const secretSet = Boolean(process.env.TELEGRAM_WEBHOOK_SECRET?.trim());
   const tokenValid = tokenSet ? await isTelegramBotTokenValid() : false;
+  const databaseOk = await isDatabaseReachable();
+  const telegramWebhook = await fetchTelegramWebhookStatus();
 
   return NextResponse.json({
     ok: true,
@@ -310,6 +345,10 @@ export async function GET(): Promise<NextResponse> {
       botTokenSet: tokenSet,
       botTokenValid: tokenValid,
       webhookSecretSet: secretSet,
+      databaseOk,
+      dataDir: process.env.DATA_DIR ?? null,
+      databaseUrl: process.env.DATABASE_URL?.replace(/\/[^/]+$/, "/…") ?? null,
     },
+    telegramWebhook,
   });
 }
