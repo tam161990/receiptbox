@@ -13,7 +13,7 @@ User → Cloudflare (DNS, SSL, CDN) → Railway (Next.js + SQLite volume)
 ## 1. Railway project
 
 1. Open [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
-2. Select the `recipies` repository
+2. Select the `tam161990/receiptbox` repository
 3. Railway auto-detects Next.js via `railway.toml` and `npm run build`
 
 ---
@@ -143,7 +143,9 @@ npm start
 |-------|-----|
 | Build fails on Prisma | Check `postinstall` runs; logs should show `prisma generate` |
 | DB empty after redeploy | Volume not mounted — check `DATA_DIR` and `/data` volume |
-| Telegram webhook 403 | `TELEGRAM_WEBHOOK_SECRET` mismatch |
+| Telegram webhook 403 | `TELEGRAM_WEBHOOK_SECRET` mismatch between Railway and `setWebhook` |
+| Bot silent, webhook 200 | `TELEGRAM_BOT_TOKEN` must be **full** `123456789:ABC...` from BotFather, not only the part after `:` |
+| Check bot token on server | `GET https://receiptbox.online/api/telegram/webhook` → `config.botTokenValid: true` |
 | 502 from Cloudflare | Railway service not running — check deploy logs |
 | Cookie login fails | `APP_URL` must match public URL; `secure` cookies need HTTPS |
 

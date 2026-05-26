@@ -37,10 +37,17 @@ function isMimeAllowed(mime: string | undefined, fileName: string | undefined): 
 }
 
 function verifyWebhookSecret(req: NextRequest): boolean {
-  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
   if (!expected) return true;
-  const received = req.headers.get("x-telegram-bot-api-secret-token");
+  const received = req.headers.get("x-telegram-bot-api-secret-token")?.trim();
   return received === expected;
+}
+
+function messageCommand(text: string | undefined): string | null {
+  if (!text) return null;
+  const trimmed = text.trim();
+  const match = trimmed.match(/^\/([a-zA-Z0-9_]+)(?:@\w+)?(?:\s|$)/);
+  return match ? match[1].toLowerCase() : null;
 }
 
 async function ensureUser(tgUser: TelegramUser) {
@@ -208,16 +215,17 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
   const user = await ensureUser(message.from);
   const chatId = message.chat.id;
   const text = (message.text || "").trim();
+  const command = messageCommand(text);
 
-  if (text.startsWith("/start")) {
+  if (command === "start") {
     await sendTelegramStartOnboarding(chatId, message.from.first_name);
     return;
   }
-  if (text.startsWith("/help")) {
+  if (command === "help") {
     await sendTelegramMessage(chatId, helpMessage(process.env.APP_URL));
     return;
   }
-  if (text.startsWith("/id")) {
+  if (command === "id") {
     await sendTelegramMessage(
       chatId,
       `Tavs Telegram ID: <code>${user.telegramUserId}</code>\nIzmanto šo ID, lai pieslēgtos vadības panelim.`,
@@ -290,8 +298,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function GET(): Promise<NextResponse> {
+  const { isTelegramBotTokenValid } = await import("@/lib/telegram");
+  const tokenSet = Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim());
+  const secretSet = Boolean(process.env.TELEGRAM_WEBHOOK_SECRET?.trim());
+  const tokenValid = tokenSet ? await isTelegramBotTokenValid() : false;
+
   return NextResponse.json({
     ok: true,
     service: "ReceiptBox LV Telegram webhook",
+    config: {
+      botTokenSet: tokenSet,
+      botTokenValid: tokenValid,
+      webhookSecretSet: secretSet,
+    },
   });
 }

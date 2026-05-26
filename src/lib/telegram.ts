@@ -73,9 +73,14 @@ export interface TelegramFileInfo {
 }
 
 function botToken(): string {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
   if (!token) {
     throw new Error("TELEGRAM_BOT_TOKEN nav konfigurēts.");
+  }
+  if (!/^\d+:[A-Za-z0-9_-]+$/.test(token)) {
+    throw new Error(
+      "TELEGRAM_BOT_TOKEN formāts nav derīgs — jābūt pilnam tokenam no BotFather (piem. 123456789:ABCdef...).",
+    );
   }
   return token;
 }
@@ -111,15 +116,20 @@ async function telegramApiMultipart<T>(method: string, form: FormData): Promise<
   return data.result;
 }
 
+type TelegramApiResponse<T> = { ok: boolean; result?: T; description?: string };
+
 async function telegramApi<T>(method: string, body: Record<string, unknown>): Promise<T> {
   const res = await fetch(`https://api.telegram.org/bot${botToken()}/${method}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = (await res.json()) as { ok: boolean; result?: T; description?: string };
-  if (!data.ok || data.result === undefined) {
+  const data = (await res.json()) as TelegramApiResponse<T>;
+  if (!data.ok) {
     throw new Error(`Telegram API kļūda (${method}): ${data.description || "nezināma"}`);
+  }
+  if (data.result === undefined) {
+    throw new Error(`Telegram API kļūda (${method}): tukša atbilde`);
   }
   return data.result;
 }
@@ -133,17 +143,46 @@ export async function sendTelegramMessage(
     };
   },
 ): Promise<void> {
+  const payload = {
+    chat_id: chatId,
+    text,
+    disable_web_page_preview: true,
+    ...(options?.replyMarkup ? { reply_markup: options.replyMarkup } : {}),
+  };
+
   try {
-    await telegramApi("sendMessage", {
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-      ...(options?.replyMarkup ? { reply_markup: options.replyMarkup } : {}),
-    });
+    await telegramApi("sendMessage", { ...payload, parse_mode: "HTML" });
+    return;
   } catch (error) {
-    // Avoid throwing into the webhook handler.
-    console.error("[telegram] sendMessage failed:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    const htmlParseFailed = message.includes("can't parse entities");
+    console.error("[telegram] sendMessage (HTML) failed:", message);
+
+    if (!htmlParseFailed) return;
+
+    try {
+      await telegramApi("sendMessage", payload);
+    } catch (fallbackError) {
+      const fallbackMessage =
+        fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+      console.error("[telegram] sendMessage (plain) failed:", fallbackMessage);
+    }
+  }
+}
+
+/** True when TELEGRAM_BOT_TOKEN is set and accepted by Telegram getMe. */
+export async function isTelegramBotTokenValid(): Promise<boolean> {
+  try {
+    botToken();
+  } catch {
+    return false;
+  }
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken()}/getMe`);
+    const data = (await res.json()) as { ok?: boolean };
+    return data.ok === true;
+  } catch {
+    return false;
   }
 }
 
